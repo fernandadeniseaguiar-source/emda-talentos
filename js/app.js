@@ -13,7 +13,7 @@
 
 const CONFIG = {
     // URL do Google Apps Script Web App
-    GOOGLE_SCRIPT_URL: 'YOUR_GOOGLE_APPS_SCRIPT_URL',
+    GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbydNX4J72YwlYFCw79Xp1wQiAFxtWTEfKgk1ywIaud-MFFFlTlR_-Y-fqGuW51oedMIyg/exec',
     
     // WhatsApp da escola para notificações
     WHATSAPP_NOTIFY: '5531988148522',
@@ -165,28 +165,6 @@ async function checkDuplicate(field, value) {
     msgEl.textContent = '';
     inputEl.classList.remove('input-duplicate');
     
-    // Se não tem Google Script configurado, verificar apenas localStorage
-    if (CONFIG.GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') {
-        // Modo simulação — verificar localStorage
-        const saved = localStorage.getItem('emda_curriculo_enviado');
-        if (saved) {
-            const data = JSON.parse(saved);
-            let match = false;
-            if (field === 'nome' && data.nome && data.nome.toLowerCase() === value.toLowerCase()) match = true;
-            if (field === 'email' && data.email && data.email.toLowerCase() === value.toLowerCase()) match = true;
-            if (field === 'whatsapp' && data.whatsapp) {
-                const cleanSaved = data.whatsapp.replace(/\D/g, '');
-                const cleanNew = value.replace(/\D/g, '');
-                if (cleanSaved === cleanNew) match = true;
-            }
-            
-            if (match) {
-                showDuplicateWarning(field, msgEl, inputEl, data);
-            }
-        }
-        return;
-    }
-    
     // Mostrar estado de verificação
     msgEl.textContent = 'Verificando...';
     msgEl.className = 'input-duplicate-msg checking';
@@ -195,13 +173,23 @@ async function checkDuplicate(field, value) {
         const cleanValue = field === 'whatsapp' ? value.replace(/\D/g, '') : value;
         const url = `${CONFIG.GOOGLE_SCRIPT_URL}?action=check&field=${field}&value=${encodeURIComponent(cleanValue)}`;
         
-        const response = await fetch(url);
-        const result = await response.json();
+        const response = await fetch(url, { redirect: 'follow' });
+        const text = await response.text();
+        
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (e) {
+            // Se não é JSON, pode ser um erro do Google — ignorar silenciosamente
+            msgEl.classList.add('hidden');
+            msgEl.textContent = '';
+            return;
+        }
         
         if (result.found) {
             showDuplicateWarning(field, msgEl, inputEl, result.data);
         } else {
-            // Limpo — nenhum duplicata
+            // Limpo — nenhuma duplicata
             msgEl.classList.add('hidden');
             msgEl.textContent = '';
         }
@@ -209,6 +197,7 @@ async function checkDuplicate(field, value) {
         console.log('Erro na verificação de duplicata:', error);
         // Silenciosamente falha — não bloquear o formulário
         msgEl.classList.add('hidden');
+        msgEl.textContent = '';
     }
 }
 
@@ -865,20 +854,20 @@ function collectFormData() {
 }
 
 async function sendToGoogleSheets(data) {
-    if (CONFIG.GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL') {
-        console.log('Dados coletados (modo simulação):', data);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        return { success: true };
+    } catch (error) {
+        console.error('Erro ao enviar para Google Sheets:', error);
+        // Não bloquear — dados já foram salvos no localStorage
         return { success: true };
     }
-    
-    const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    
-    return { success: true };
 }
 
 // ========================================

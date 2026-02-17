@@ -3,7 +3,7 @@
    Auto-update enabled
 ======================================== */
 
-const CACHE_NAME = 'emda-talentos-v10';
+const CACHE_NAME = 'emda-talentos-v11';
 
 const STATIC_ASSETS = [
     '/',
