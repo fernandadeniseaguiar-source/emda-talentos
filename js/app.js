@@ -1072,15 +1072,6 @@ function collectFormData() {
     
     const cursos = cursosAnos.join('\n');
     
-    // Ano de conclusão mais recente (para compatibilidade)
-    const anosSelects = document.querySelectorAll('.curso-ano-select');
-    let anoConclusao = '';
-    anosSelects.forEach(sel => {
-        if (sel.value && (sel.value > anoConclusao || !anoConclusao)) {
-            anoConclusao = sel.value;
-        }
-    });
-    
     return {
         timestamp: new Date().toISOString(),
         nome: document.getElementById('nome').value.trim(),
@@ -1089,7 +1080,6 @@ function collectFormData() {
         cidade: document.getElementById('cidade').value.trim(),
         estado: document.getElementById('estado').value,
         cursos: cursos,
-        ano_conclusao: anoConclusao,
         experiencia: document.getElementById('experiencia').value.trim(),
         instagram: document.getElementById('instagram').value.trim(),
         portfolio: document.getElementById('portfolio').value.trim(),
