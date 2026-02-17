@@ -34,7 +34,6 @@ const elements = {
     installDismiss: document.getElementById('install-dismiss'),
     photoUpload: document.getElementById('photo-upload'),
     photoInput: document.getElementById('photo-input'),
-    cameraInput: document.getElementById('camera-input'),
     photoPreview: document.getElementById('photo-preview'),
     photoPlaceholder: document.getElementById('photo-placeholder'),
     btnGallery: document.getElementById('btn-gallery'),
@@ -147,9 +146,6 @@ function initPhotoUpload() {
     
     // Handle file selection from gallery
     elements.photoInput.addEventListener('change', handlePhotoSelect);
-    
-    // Handle file selection from camera (input estático)
-    elements.cameraInput.addEventListener('change', handlePhotoSelect);
 }
 
 function handlePhotoSelect(e) {
