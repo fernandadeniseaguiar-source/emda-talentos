@@ -1443,26 +1443,56 @@ function initAdmin() {
         if (e.key === 'Enter') adminLogin();
     });
     
-    function adminLogin() {
+    async function adminLogin() {
         const pin = passwordInput.value.trim();
-        if (pin === ADMIN_PIN) {
-            adminAuthMode = 'pin';
-            loginOverlay.classList.add('hidden');
-            openAdminPanel();
-            // Oferecer ativar biometria se ainda não tem
-            if (window.PublicKeyCredential && !localStorage.getItem(BIOMETRIC_STORAGE_KEY)) {
-                setTimeout(() => {
-                    if (confirm('Deseja ativar a biometria neste dispositivo para acessar mais rápido?')) {
-                        biometricRegister();
-                    }
-                }, 500);
+        if (!pin) return;
+        
+        loginBtn.textContent = 'Verificando...';
+        loginBtn.disabled = true;
+        
+        try {
+            // Validar no servidor
+            const url = CONFIG.GOOGLE_SCRIPT_URL + '?action=list&pin=' + encodeURIComponent(pin);
+            const response = await fetch(url);
+            const json = await response.json();
+            
+            if (json.error) {
+                loginError.classList.remove('hidden');
+                passwordInput.classList.add('input-error');
+                setTimeout(() => passwordInput.classList.remove('input-error'), 500);
+            } else {
+                // Senha correta — atualizar PIN local
+                ADMIN_PIN = pin;
+                adminAuthMode = 'pin';
+                loginOverlay.classList.add('hidden');
+                
+                // Já temos os dados, passar direto
+                document.getElementById('admin-panel').classList.remove('hidden');
+                pushAppState('admin-panel');
+                adminData = json.data || [];
+                document.getElementById('admin-loading').classList.add('hidden');
+                if (adminData.length === 0) {
+                    document.getElementById('admin-empty').classList.remove('hidden');
+                } else {
+                    updateAdminStats();
+                    renderAdminList('');
+                }
+                
+                // Oferecer biometria
+                if (window.PublicKeyCredential && !localStorage.getItem(BIOMETRIC_STORAGE_KEY)) {
+                    setTimeout(() => {
+                        if (confirm('Deseja ativar a biometria neste dispositivo para acessar mais rápido?')) {
+                            biometricRegister();
+                        }
+                    }, 500);
+                }
             }
-        } else {
+        } catch (error) {
+            loginError.textContent = 'Erro de conexão';
             loginError.classList.remove('hidden');
-            passwordInput.classList.add('input-error');
-            setTimeout(() => {
-                passwordInput.classList.remove('input-error');
-            }, 500);
+        } finally {
+            loginBtn.textContent = 'Entrar';
+            loginBtn.disabled = false;
         }
     }
     
@@ -1619,7 +1649,7 @@ function renderAdminList(filter) {
         if (item.foto_link && item.foto_link.indexOf('drive.google.com') !== -1) {
             const fileId = item.foto_link.match(/\/d\/([a-zA-Z0-9_-]+)/);
             if (fileId && fileId[1]) {
-                avatarContent = `<img src="https://drive.google.com/thumbnail?id=${fileId[1]}&sz=w100" alt="">`;
+                avatarContent = `<img src="https://lh3.googleusercontent.com/d/${fileId[1]}=w100" alt="">`;
                 avatarClickable = true;
             }
         }
@@ -1669,8 +1699,8 @@ function showAdminDetail(item) {
     if (item.foto_link && item.foto_link.indexOf('drive.google.com') !== -1) {
         const fileId = item.foto_link.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (fileId && fileId[1]) {
-            const thumbUrl = `https://drive.google.com/thumbnail?id=${fileId[1]}&sz=w200`;
-            photoFullUrl = `https://drive.google.com/thumbnail?id=${fileId[1]}&sz=w800`;
+            const thumbUrl = `https://lh3.googleusercontent.com/d/${fileId[1]}=w200`;
+            photoFullUrl = `https://lh3.googleusercontent.com/d/${fileId[1]}=w800`;
             photoHtml = `<img src="${thumbUrl}" alt="" style="cursor:pointer" onclick="openPhotoFullscreen('${photoFullUrl}')">`;
         }
     }
@@ -1823,15 +1853,9 @@ async function adminChangePassword() {
     const newPin = newInput.value.trim();
     const confirm = confirmInput.value.trim();
     
-    // Validações
+    // Validações locais básicas
     if (!current) {
         errorEl.textContent = 'Digite a senha atual';
-        errorEl.classList.remove('hidden');
-        return;
-    }
-    
-    if (current !== ADMIN_PIN) {
-        errorEl.textContent = 'Senha atual incorreta';
         errorEl.classList.remove('hidden');
         return;
     }
