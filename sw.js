@@ -3,19 +3,19 @@
    Auto-update enabled
 ======================================== */
 
-const CACHE_NAME = 'emda-talentos-v30';
+const CACHE_NAME = 'emda-talentos-v31';
 
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/js/app.js',
-    '/manifest.json',
-    '/img/logo-white.png',
-    '/img/logo-dress.png',
-    '/img/logo-text.png',
-    '/img/icon-192.png',
-    '/img/icon-512.png'
+    './',
+    './index.html',
+    './css/style.css',
+    './js/app.js',
+    './manifest.json',
+    './img/logo-white.png',
+    './img/logo-dress.png',
+    './img/logo-text.png',
+    './img/icon-192.png',
+    './img/icon-512.png'
 ];
 
 // ========================================
