@@ -1308,7 +1308,11 @@ function initInstallPrompt() {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // Não mostra automaticamente — será chamado ao abrir gestão
+        // Se o admin panel já está aberto, mostrar agora
+        const adminPanel = document.getElementById('admin-panel');
+        if (adminPanel && !adminPanel.classList.contains('hidden')) {
+            showInstallPromptInAdmin();
+        }
     });
     
     elements.installAccept.addEventListener('click', handleInstallClick);
@@ -1316,19 +1320,18 @@ function initInstallPrompt() {
 }
 
 function showInstallPromptInAdmin() {
-    // Só mostra se não está instalado e não foi dispensado recentemente
     if (window.matchMedia('(display-mode: standalone)').matches) return;
     
     const dismissedAt = localStorage.getItem('installDismissed');
     if (dismissedAt && (Date.now() - parseInt(dismissedAt)) < 24 * 60 * 60 * 1000) return;
     
     if (deferredPrompt) {
-        setTimeout(() => showInstallPrompt(), 1000);
+        setTimeout(() => showInstallPrompt(), 500);
     } else {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isInStandaloneMode = window.navigator.standalone === true;
         if (isIOS && !isInStandaloneMode) {
-            setTimeout(() => showIOSInstallPrompt(), 1000);
+            setTimeout(() => showIOSInstallPrompt(), 500);
         }
     }
 }

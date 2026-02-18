@@ -434,8 +434,8 @@ body {
     color: var(--color-gray-500);
 }
 
-/* Mobile adjustments */
-@media (max-height: 700px) {
+/* Mobile adjustments - only in standalone (PWA) mode */
+@media (display-mode: standalone) and (max-height: 700px) {
     .welcome-screen {
         padding: var(--space-md);
     }
@@ -486,7 +486,7 @@ body {
     }
 }
 
-@media (max-height: 600px) {
+@media (display-mode: standalone) and (max-height: 600px) {
     .welcome-logo {
         max-width: 180px;
     }
@@ -497,6 +497,26 @@ body {
     
     .welcome-divider {
         margin-bottom: var(--space-sm);
+    }
+}
+
+/* Browser fallback - only shrink on very small heights */
+@media (max-height: 550px) and (not (display-mode: standalone)) {
+    .welcome-logo {
+        max-width: 240px;
+    }
+    
+    .welcome-title {
+        font-size: 1.3rem;
+    }
+    
+    .welcome-description {
+        font-size: 0.78rem;
+    }
+    
+    .welcome-btn {
+        padding: var(--space-sm) var(--space-lg);
+        font-size: 0.78rem;
     }
 }
 
@@ -2930,7 +2950,16 @@ body {
 }
 
 .admin-stat-date-filter:hover {
-    background: rgba(201, 169, 98, 0.1);
+    background: rgba(201, 169, 98, 0.15);
+}
+
+.admin-stat-date-filter.open {
+    background: rgba(201, 169, 98, 0.25);
+    box-shadow: 0 0 0 1px var(--color-gold);
+}
+
+.admin-stat-date-filter.open .admin-stat-number {
+    color: var(--color-gold);
 }
 
 .admin-stat-date-filter .admin-stat-label svg {
